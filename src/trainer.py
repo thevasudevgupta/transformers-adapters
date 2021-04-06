@@ -2,6 +2,8 @@
 
 import torch
 from torch_trainer import TorchTrainer
+import os
+from huggingface_hub import ModelHubMixin
 
 
 class Trainer(TorchTrainer):
@@ -66,8 +68,15 @@ class Trainer(TorchTrainer):
                         self.args.dec_self_attn_adapter,
                         self.args.enc_tok_embed_adapter,
                         self.args.dec_tok_embed_adapter)
-
             self.save_training_state_dict(self.base_dir)
+
+        if self.args.finetuned_id is not None:
+            save_dir = os.path.join(self.base_dir, f"transformers-adapters-e{epoch}")
+            self.save_pretrained(save_dir)
+            try:
+                ModelHubMixin.push_to_hub(save_dir, model_id=self.args.finetuned_id, commit_message=f"add epoch-{epoch}")
+            except Exception as e:
+                print(e)
 
     def save_pretrained(self, path: str):
         print('saving weights in HF format')

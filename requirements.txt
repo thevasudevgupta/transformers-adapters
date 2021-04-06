@@ -4,3 +4,4 @@ sacrebleu==1.4.14
 wandb==0.10.10
 scikit-learn==0.23.2
 tensorboard
+huggingface_hub

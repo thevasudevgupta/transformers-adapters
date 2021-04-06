@@ -17,14 +17,16 @@ class TrainerConfig(DefaultArgs):
     src_lang: str = 'hi_IN'
     max_length: int = 32
     max_target_length: int = 32
-    tr_max_samples: int = 100000
-    val_max_samples: int = 20000
+
+    tr_max_samples: int = -1
+    val_max_samples: int = -1
+    finetuned_id: str = "dummy"
 
     save_specific: bool = False
     load_specific_path: str = None # "specific-layers"
 
     batch_size: int = 32
-    lr: float = 1e-1
+    lr: float = 1e-3
 
     model_id: str = "facebook/mbart-large-cc25" # "vasudevgupta/mbart-iitb-hin-eng"
     tokenizer_id: str = "facebook/mbart-large-cc25"
@@ -33,7 +35,7 @@ class TrainerConfig(DefaultArgs):
     tb_grads: str = "tb_grads"
     tb_params: str = "tb_params"
 
-    test_size: float = .25
+    test_size: float = .03
     random_seed:  int = 7232114
     num_workers: int = 2
     max_pred_length: int = 40
@@ -65,8 +67,8 @@ class TrainerConfig(DefaultArgs):
     cross_attn_norm_grad: bool = True
 
     # args used in torch_trainer
-    max_epochs: int = 3
-    accumulation_steps: int = 16
+    max_epochs: int = 5
+    accumulation_steps: int = 1
     save_epoch_dir: str = None
     early_stop_n: int = None
     map_location: torch.device = torch.device("cuda:0")
@@ -77,7 +79,7 @@ class TrainerConfig(DefaultArgs):
     fast_dev_run: bool = False
 
     # all these args will be invalid if you run sweep
-    project_name: str = 'mbart'
+    project_name: str = 'transformers-adapters'
     wandb_run_name: str = None
     wandb_off: bool = False
     wandb_resume: bool = False
@@ -104,21 +106,21 @@ class TrainerConfig(DefaultArgs):
                                                                                         add_layer_norm_after=False))
 
 
-iitb_hin = TrainerConfig(tgt_file='data/parallel/IITB.en-hi.en', 
-                    src_file='data/parallel/IITB.en-hi.hi',
+iitb_hin = TrainerConfig(tgt_file='/data/parallel/IITB.en-hi.en', 
+                    src_file='/data/parallel/IITB.en-hi.hi',
                     src_lang="hi_IN",
                     max_length=32,
                     max_target_length=32,
                     base_dir="iitb_base_dir")
 
-bhasha_hin = TrainerConfig(tgt_file="data/bhasha/pib-v0.2/en-hi/train.en", 
-                    src_file="data/bhasha/pib-v0.2/en-hi/train.hi",
+bhasha_hin = TrainerConfig(tgt_file="/data/pib-v1.3/en-hi/train.en", 
+                    src_file="/data/pib-v1.3/en-hi/train.hi",
                     src_lang="hi_IN",
-                    max_length=32,
-                    max_target_length=32)
+                    max_length=40,
+                    max_target_length=40)
 
-bhasha_guj = TrainerConfig(tgt_file="data/bhasha/pib-v0.2/en-gu/train.en", 
-                    src_file="data/bhasha/pib-v0.2/en-gu/train.gu",
+bhasha_guj = TrainerConfig(tgt_file="/data/pib-v1.3/en-gu/train.en", 
+                    src_file="/data/pib-v1.3/en-gu/train.gu",
                     src_lang="gu_IN",
                     max_length=40,
                     max_target_length=40,
@@ -142,7 +144,7 @@ config_adapt_sa_ffn = replace(bhasha_hin,
                         base_dir="config_adapt_sa_ffn",
                         save_adapter_path=None)
 
-freeze_model = replace(bhasha_hin,
+freeze_model_hin = replace(bhasha_hin,
                     base_dir="tr_dec-ffn_enc-attn_embed_hin2000,400",
                     wandb_run_name="tr_dec-ffn_enc-attn_embed_hin2000,400",
                     embed_grad=False,
@@ -157,26 +159,58 @@ freeze_model = replace(bhasha_hin,
                     cross_attn_norm_grad=False,
                     save_specific=False,
                     # load_specific_path="specific-layers.pt",
-                    max_length=32,
-                    max_target_length=32)
+                    max_length=40,
+                    max_target_length=40)
 
-best_adapters = replace(freeze_model,
+best_adapters_hin = replace(freeze_model_hin,
             enc_self_attn_adapter=True,
             dec_ffn_adapter=True,
             enc_tok_embed_adapter=True,
             dec_tok_embed_adapter=True,
-            save_adapter_path="adapter.pt",
+            save_adapter_path="adapter",
             # load_adapter_path="adapter.pt",
-            base_dir="tr-lr1e-2_dec-ffn-adapter_enc-attn-adapter_embed-adapter_hin0.1M,20K",
-            wandb_run_name="tr-lr1e-2_dec-ffn-adapter_enc-attn-adapter_embed-adapter_hin0.1M,20K")
+            base_dir="final-best-adapters-hindi",
+            wandb_run_name="final-best-adapters-hin",
+            finetuned_id="offnote-mbart-adapters-hin-eng")
 
-run = replace(freeze_model,
-            base_dir="embed-adapter_bhasha-hin0.1M,20K",
-            wandb_run_name="embed-adapter_bhasha-hin0.1M,20K",
+
+freeze_model_guj = replace(bhasha_guj,
+                    base_dir="tr_dec-ffn_enc-attn_embed_hin2000,400",
+                    wandb_run_name="tr_dec-ffn_enc-attn_embed_hin2000,400",
+                    embed_grad=False,
+                    pos_embed_grad=False,
+                    enc_ffn_grad=False,
+                    dec_ffn_grad=False,
+                    enc_attn_grad=False,
+                    dec_attn_grad=False,
+                    cross_attn_grad=False,
+                    enc_norm_grad=False,
+                    dec_norm_grad=False,
+                    cross_attn_norm_grad=False,
+                    save_specific=False,
+                    # load_specific_path="specific-layers.pt",
+                    max_length=40,
+                    max_target_length=40)
+
+
+best_adapters_guj = replace(freeze_model_guj,
+            enc_self_attn_adapter=True,
+            dec_ffn_adapter=True,
             enc_tok_embed_adapter=True,
             dec_tok_embed_adapter=True,
-            # save_epoch_dir="epoch-wts",
-            save_adapter_path="adapter.pt")
+            save_adapter_path="adapter",
+            # load_adapter_path="adapter.pt",
+            base_dir="final-best-adapters-guj",
+            wandb_run_name="final-best-adapters-guj",
+            finetuned_id="offnote-mbart-adapters-guj-eng")
+
+# run = replace(freeze_model,
+#             base_dir="embed-adapter_bhasha-hin0.1M,20K",
+#             wandb_run_name="embed-adapter_bhasha-hin0.1M,20K",
+#             enc_tok_embed_adapter=True,
+#             dec_tok_embed_adapter=True,
+#             # save_epoch_dir="epoch-wts",
+#             save_adapter_path="adapter.pt")
 
 check = replace(bhasha_hin, tr_max_samples=100, val_max_samples=30, wandb_run_name="random")
 
