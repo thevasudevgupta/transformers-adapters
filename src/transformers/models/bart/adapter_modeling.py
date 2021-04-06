@@ -240,20 +240,20 @@ class MixAdapterBFCG(object):
         """Inherit BFCG from this this class"""
 
     def add_adapter_(self,
-                    enc_ffn_adapter: bool, 
-                    dec_ffn_adapter: bool,
-                    enc_self_attn_adapter: bool,
-                    dec_self_attn_adapter: bool,
-                    cross_attn_adapter: bool,
-                    enc_tok_embed_adapter: bool,
-                    dec_tok_embed_adapter: bool,
-                    enc_ffn_adapter_config: AdapterConfig,
-                    dec_ffn_adapter_config: AdapterConfig,
-                    enc_self_attn_adapter_config: AdapterConfig,
-                    dec_self_attn_adapter_config: AdapterConfig,
-                    cross_attn_adapter_config: AdapterConfig,
-                    enc_tok_embed_adapter_config: AdapterConfig,
-                    dec_tok_embed_adapter_config: AdapterConfig):
+                    enc_ffn_adapter: bool = False, 
+                    dec_ffn_adapter: bool = False,
+                    enc_self_attn_adapter: bool = False,
+                    dec_self_attn_adapter: bool = False,
+                    cross_attn_adapter: bool = False,
+                    enc_tok_embed_adapter: bool = False,
+                    dec_tok_embed_adapter: bool = False,
+                    enc_ffn_adapter_config: AdapterConfig = None,
+                    dec_ffn_adapter_config: AdapterConfig = None,
+                    enc_self_attn_adapter_config: AdapterConfig = None,
+                    dec_self_attn_adapter_config: AdapterConfig = None,
+                    cross_attn_adapter_config: AdapterConfig = None,
+                    enc_tok_embed_adapter_config: AdapterConfig = None,
+                    dec_tok_embed_adapter_config: AdapterConfig = None):
 
         m1 = "encoder ffn adapter NOT added"
         m2 = "encoder self-attn adapter NOT added"
