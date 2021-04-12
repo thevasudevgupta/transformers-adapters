@@ -15,8 +15,8 @@ class TrainerConfig(DefaultArgs):
     single_file: bool = False
 
     src_lang: str = 'hi_IN'
-    max_length: int = 32
-    max_target_length: int = 32
+    max_length: int = 40
+    max_target_length: int = 40
 
     tr_max_samples: int = -1
     val_max_samples: int = -1
@@ -106,25 +106,27 @@ class TrainerConfig(DefaultArgs):
                                                                                         add_layer_norm_after=False))
 
 
-iitb_hin = TrainerConfig(tgt_file='/data/parallel/IITB.en-hi.en', 
-                    src_file='/data/parallel/IITB.en-hi.hi',
+iitb_hin = TrainerConfig(tgt_file='parallel/IITB.en-hi.en', 
+                    src_file='parallel/IITB.en-hi.hi',
                     src_lang="hi_IN",
                     max_length=32,
                     max_target_length=32,
                     base_dir="iitb_base_dir")
 
-bhasha_hin = TrainerConfig(tgt_file="/data/pib-v1.3/en-hi/train.en", 
-                    src_file="/data/pib-v1.3/en-hi/train.hi",
+bhasha_hin = TrainerConfig(tgt_file="pib-v1.3/en-hi/train.en", 
+                    src_file="pib-v1.3/en-hi/train.hi",
                     src_lang="hi_IN",
                     max_length=40,
-                    max_target_length=40)
+                    max_target_length=40,
+                    test_size=0.03)
 
-bhasha_guj = TrainerConfig(tgt_file="/data/pib-v1.3/en-gu/train.en", 
-                    src_file="/data/pib-v1.3/en-gu/train.gu",
+bhasha_guj = TrainerConfig(tgt_file="pib-v1.3/en-gu/train.en", 
+                    src_file="pib-v1.3/en-gu/train.gu",
                     src_lang="gu_IN",
                     max_length=40,
                     max_target_length=40,
-                    base_dir="guj_base_dir")
+                    base_dir="guj_base_dir",
+                    test_size=0.13)
 
 config_adapt_sa_ffn = replace(bhasha_hin,
                         enc_ffn_adapter=True,
@@ -162,18 +164,6 @@ freeze_model_hin = replace(bhasha_hin,
                     max_length=40,
                     max_target_length=40)
 
-best_adapters_hin = replace(freeze_model_hin,
-            enc_self_attn_adapter=True,
-            dec_ffn_adapter=True,
-            enc_tok_embed_adapter=True,
-            dec_tok_embed_adapter=True,
-            save_adapter_path="adapter",
-            # load_adapter_path="adapter.pt",
-            base_dir="final-best-adapters-hindi",
-            wandb_run_name="final-best-adapters-hin",
-            finetuned_id="offnote-mbart-adapters-hin-eng")
-
-
 freeze_model_guj = replace(bhasha_guj,
                     base_dir="tr_dec-ffn_enc-attn_embed_hin2000,400",
                     wandb_run_name="tr_dec-ffn_enc-attn_embed_hin2000,400",
@@ -193,6 +183,19 @@ freeze_model_guj = replace(bhasha_guj,
                     max_target_length=40)
 
 
+best_adapters_hin = replace(freeze_model_hin,
+            enc_self_attn_adapter=True,
+            dec_ffn_adapter=True,
+            enc_tok_embed_adapter=True,
+            dec_tok_embed_adapter=True,
+            save_adapter_path="adapter",
+            # load_adapter_path="adapter.pt",
+            base_dir="final-best-adapters-hindi",
+            wandb_run_name="final-best-adapters-hin",
+            finetuned_id="offnote-mbart-adapters-hin-eng",
+            lr=1e-3,
+            max_epochs=5)
+
 best_adapters_guj = replace(freeze_model_guj,
             enc_self_attn_adapter=True,
             dec_ffn_adapter=True,
@@ -202,19 +205,25 @@ best_adapters_guj = replace(freeze_model_guj,
             # load_adapter_path="adapter.pt",
             base_dir="final-best-adapters-guj",
             wandb_run_name="final-best-adapters-guj",
-            finetuned_id="offnote-mbart-adapters-guj-eng")
+            finetuned_id="offnote-mbart-adapters-guj-eng",
+            lr=1e-3,
+            max_epochs=5)
 
-# run = replace(freeze_model,
-#             base_dir="embed-adapter_bhasha-hin0.1M,20K",
-#             wandb_run_name="embed-adapter_bhasha-hin0.1M,20K",
-#             enc_tok_embed_adapter=True,
-#             dec_tok_embed_adapter=True,
-#             # save_epoch_dir="epoch-wts",
-#             save_adapter_path="adapter.pt")
+full_train_guj = replace(bhasha_guj,
+            base_dir="mbart-bhasha-guj-eng",
+            wandb_run_name="mbart-bhasha-guj-eng",
+            finetuned_id="mbart-bhasha-guj-eng",
+            lr=5e-5,
+            max_epochs=3)
 
-check = replace(bhasha_hin, tr_max_samples=100, val_max_samples=30, wandb_run_name="random")
+full_train_hin = replace(bhasha_hin,
+            base_dir="mbart-bhasha-hin-eng",
+            wandb_run_name="mbart-bhasha-hin-eng",
+            finetuned_id="mbart-bhasha-hin-eng",
+            lr=5e-5,
+            max_epochs=3)
 
 # this is getting called in `main.py`
-main = check
+# main = full_train_hin
 # if sweep is defined then these args will work like default
 # and will be overwritten by wandb

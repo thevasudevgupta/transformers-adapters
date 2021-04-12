@@ -37,8 +37,11 @@ if is_torch_tpu_available():
 if version.parse(torch.__version__) <= version.parse("1.4.1"):
     SAVE_STATE_WARNING = ""
 else:
-    from torch.optim.lr_scheduler import SAVE_STATE_WARNING
-
+    try:
+        from torch.optim.lr_scheduler import SAVE_STATE_WARNING
+    except:
+        pass
+    
 logger = logging.get_logger(__name__)
 
 

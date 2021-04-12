@@ -18,6 +18,8 @@ import argparse
 
 # python train.py --config "best_adapters_guj"
 # python train.py --config "best_adapters_hin"
+# python train.py --config "full_train_guj"
+# python train.py --config "full_train_hin"
 
 if __name__ == '__main__':
 
